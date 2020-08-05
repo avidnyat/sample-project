@@ -4,7 +4,9 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Building..'
+                echo 'Install apache2'
+                sh "ansible-playbook /root/ansible-project/ansible-playbooks/lamp_ubuntu1804/playbook.yml -l web_server -u root
+                echo "Lamp stack installed"
             }
         }
         stage('Test') {
