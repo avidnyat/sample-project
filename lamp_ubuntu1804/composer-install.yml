@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: copy composer file
+      template: >
+        src=files/install_composer.sh
+        dest=/root/install_composer.sh
+        owner=root
+        group=root
+        mode=0644
+    - name: Install composer
+      command: sh /root/install_composer.sh
+    - name: Move Composer globally
+      become: true
+      command: mv composer.phar /usr/local/bin/composer
+    - name: Set permissions on Composer
+      become: true
+      file:
+        path: /usr/local/bin/composer
+        mode: "a+x"
+    - name: composer install
+      command: composer install
+      args:
+        chdir: /var/www/html/lamp-laravel/

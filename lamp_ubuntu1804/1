@@ -1,0 +1,16 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: Build Number {{ version }}
+      command: 'echo {{ version }}'
+    - name: List old releases and clean them up
+      shell: "ls -t /var/www/html/releases/ | tail -n +4"
+      register: contents
+    - file: 
+        path: "/var/www/html/releases/{{ item }}"
+        state: absent
+      with_items: "{{ contents.stdout_lines }}"
