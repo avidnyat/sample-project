@@ -34,7 +34,7 @@ pipeline {
             stages {
                 stage("Taking backup") {
                    steps {
-                       echo '${env.BUILD_NUMBER}'
+                       sh 'sudo ansible-playbook /root/ansible-project/ansible-playbooks/lamp_ubuntu1804/build-number.yml -l web_server -u root --extra-vars 'version= ${env.BUILD_NUMBER}''
                    }
                 }
                 stage("Git new clone") {
