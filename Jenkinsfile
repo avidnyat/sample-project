@@ -34,7 +34,7 @@ pipeline {
             stages {
                 stage("Taking backup") {
                    steps {
-                       echo 'Taking backup'
+                       echo '${env.BUILD_NUMBER}'
                    }
                 }
                 stage("Git new clone") {
