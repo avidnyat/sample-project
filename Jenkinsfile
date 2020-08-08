@@ -30,7 +30,7 @@ pipeline {
                }
             }
         }
-        stage('Build') {
+        stage('Build setup') {
             stages {
                 stage("Taking backup") {
                    steps {
@@ -40,6 +40,7 @@ pipeline {
                 stage("Git new clone") {
                    steps {
                        echo 'Git Clone'
+                       sh "sudo ansible-playbook /root/ansible-project/ansible-playbooks/lamp_ubuntu1804/git-clone.yml -l web_server -u root"
                    }
                 }
                 stage("composer install") {
