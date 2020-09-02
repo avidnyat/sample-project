@@ -6,7 +6,7 @@
 
   tasks:
     - name: Create swap file
-      command: dd if=/dev/zero of=/swapfile bs=1024 count=2G creates="/swapfile"
+      command: fallocate -l {{ (2084  | int * 1024 * 1024) }} /swapfile creates="/swapfile"
       tags:
          - swap.file.create
     - name: Change swap file permissions
@@ -22,7 +22,7 @@
       tags:
          - swap.file.mkswap
     - name: Make swap file
-      command: "sudo mkswap {{ swap_file_path }}"
+      command: "sudo mkswap /swapfile"
       when: swapfile.stdout.find('swap file') == -1
       tags:
          - swap.file.mkswap
@@ -49,9 +49,8 @@
         command: install
         working_dir: /var/www/html/releases/release_{{ version }}
     - name: install npm
-      shell: apt-get install npm
-      args:
-        chdir: /var/www/html/releases/release_{{ version }}
+      apt: name={{ item }} update_cache=yes state=latest
+      loop: [ 'npm']
     - name: upgrade npm
       shell: npm i -g npm@latest
       args:
@@ -74,6 +73,10 @@
         chdir: /var/www/html/releases/release_{{ version }}
     - name: cache clear
       shell: php artisan cache:clear
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: artisan migrate
+      shell: php artisan migrate
       args:
         chdir: /var/www/html/releases/release_{{ version }}
     - name: make directory writable

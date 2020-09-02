@@ -8,3 +8,50 @@
     - name: Install LAMP Packages
       apt: name={{ item }} update_cache=yes state=latest
       loop: [ 'apache2', 'mysql-server', 'python3-pymysql', 'php', 'php-mysql', 'libapache2-mod-php', 'php-mbstring', 'php-curl', 'php-xml', 'php-zip']
+    - name: Install mySQL Server
+      apt: name=mysql-server state=present
+    - name: Install Additional Dependencies
+      apt:
+        pkg:
+          - postfix-mysql
+          - dovecot-imapd
+          - dovecot-lmtpd
+          - dovecot-mysql
+          - python-pymysql
+          - mysql-client
+          - mysql-common
+        state: present
+    - name: Ensure mySQL is running and starts on boot
+      service: name=mysql state=started enabled=true
+
+    - name: Stop MySQL
+      service: name=mysql state=stopped
+    - name: set environment variables
+      shell: systemctl set-environment MYSQLD_OPTS="--skip-grant-tables"
+    - name: Start MySQL
+      service: name=mysql state=started
+    - name: sql query
+      command:  mysql -u root --execute="ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'avidnyat';"
+    - name: Create ~/.my.cnf
+      file:
+        path: ~/.my.cnf
+        state: touch
+    - name: Insert into ~/.my.cnf
+      blockinfile:
+        path: ~/.my.cnf
+        block: |
+          [client]
+          user=root
+          password=avidnyat
+    - name: sql query flush
+      command:  mysql -u root --execute="FLUSH PRIVILEGES"
+    - name: Stop MySQL
+      service: name=mysql state=stopped
+    - name: unset environment variables
+      shell: systemctl unset-environment MYSQLD_OPTS
+    - name: Start MySQL
+      service: name=mysql state=started
+    - name: Create a new database with name 'laravel'
+      mysql_db:
+        name: laravel
+        state: present

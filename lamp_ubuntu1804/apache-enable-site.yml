@@ -11,13 +11,13 @@
         state: directory
         owner: "{{ app_user }}"
         mode: '0755'
-
+    - name: enable mod rewrite
+      shell: a2enmod rewrite
     - name: Set up Apache virtualhost
       template:
         src: "files/apache.conf.j2"
         dest: "/etc/apache2/sites-available/000-default.conf"
       notify: Reload Apache
-
   handlers:
     - name: Reload Apache
       service:
