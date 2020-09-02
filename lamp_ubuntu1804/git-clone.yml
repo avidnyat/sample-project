@@ -34,7 +34,9 @@
         owner=root
         group=root
         mode=0644
-      
+    - name: add github to known host
+      shell: ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+
     - name: clone a private repository
       git: >
         repo=ssh://git@github.com/avidnyat/lamp-laravel.git

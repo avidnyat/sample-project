@@ -5,24 +5,78 @@
     - vars/default.yml
 
   tasks:
-    - name: copy composer file
-      template: >
-        src=files/install_composer.sh
-        dest=/root/install_composer.sh
-        owner=root
-        group=root
-        mode=0644
-    - name: Install composer
-      command: sh /root/install_composer.sh
-    - name: Move Composer globally
-      become: true
-      command: mv composer.phar /usr/local/bin/composer
-    - name: Set permissions on Composer
-      become: true
-      file:
-        path: /usr/local/bin/composer
-        mode: "a+x"
-    - name: composer install
-      command: composer install
+    - name: Create swap file
+      command: dd if=/dev/zero of=/swapfile bs=1024 count=2G creates="/swapfile"
+      tags:
+         - swap.file.create
+    - name: Change swap file permissions
+      file: path="/swapfile"
+            owner=root
+            group=root
+            mode=0600
+      tags:
+         - swap.file.permissions
+    - name: "Check swap file type"
+      command: file /swapfile
+      register: swapfile
+      tags:
+         - swap.file.mkswap
+    - name: Make swap file
+      command: "sudo mkswap {{ swap_file_path }}"
+      when: swapfile.stdout.find('swap file') == -1
+      tags:
+         - swap.file.mkswap
+    - name: Write swap entry in fstab
+      mount: name=none
+             src=/swapfile
+             fstype=swap
+             opts=sw
+             passno=0
+             dump=0
+             state=present
+      tags:
+         - swap.fstab
+    - name: Mount swap
+      command: "swapon /swapfile"
+      when: ansible_swaptotal_mb < 1
+      tags:
+         - swap.file.swapon
+    - name: install composer
+      shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
       args:
-        chdir: /var/www/html/lamp-laravel/
+        creates: /usr/local/bin/composer
+    - composer:
+        command: install
+        working_dir: /var/www/html/releases/release_{{ version }}
+    - name: install npm
+      shell: apt-get install npm
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: upgrade npm
+      shell: npm i -g npm@latest
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: install package.json
+      shell: npm install
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: install run dev
+      shell: npm run dev
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: encryption key
+      shell: php artisan key:generate
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: config clear
+      shell: php artisan config:clear
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: cache clear
+      shell: php artisan cache:clear
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: make directory writable
+      shell: chmod -R 0777 .
+      args:
+        chdir: /var/www/html/releases/
