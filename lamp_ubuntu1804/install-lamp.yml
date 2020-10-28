@@ -31,7 +31,7 @@
     - name: Start MySQL
       service: name=mysql state=started
     - name: sql query
-      command:  mysql -u root --execute="ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'avidnyat';"
+      command:  mysql -u root --execute="ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
     - name: Create ~/.my.cnf
       file:
         path: ~/.my.cnf
@@ -42,7 +42,7 @@
         block: |
           [client]
           user=root
-          password=avidnyat
+          password={{ mysql_root_password }}
     - name: sql query flush
       command:  mysql -u root --execute="FLUSH PRIVILEGES"
     - name: Stop MySQL
