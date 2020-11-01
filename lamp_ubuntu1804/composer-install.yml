@@ -3,7 +3,8 @@
   become: true
   vars_files:
     - vars/default.yml
-
+  environment:
+          COMPOSER_ALLOW_SUPERUSER: 1
   tasks:
     - name: Create swap file
       command: fallocate -l {{ (2084  | int * 1024 * 1024) }} /swapfile creates="/swapfile"
@@ -45,8 +46,13 @@
       shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
       args:
         creates: /usr/local/bin/composer
+    - name: disable composer root warning message
+      shell: export COMPOSER_ALLOW_SUPERUSER=1
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
     - composer:
         command: install
+        arguments: -n -vvv
         working_dir: /var/www/html/releases/release_{{ version }}
     - name: install npm
       apt: name={{ item }} update_cache=yes state=latest
@@ -77,6 +83,10 @@
         chdir: /var/www/html/releases/release_{{ version }}
     - name: artisan migrate
       shell: php artisan migrate
+      args:
+        chdir: /var/www/html/releases/release_{{ version }}
+    - name: artisan test
+      shell: php artisan test
       args:
         chdir: /var/www/html/releases/release_{{ version }}
     - name: make directory writable
