@@ -7,7 +7,7 @@
   #Apache Configuration
     - name: Install LAMP Packages
       apt: name={{ item }} update_cache=yes state=latest
-      loop: [ 'apache2', 'mysql-server', 'python3-pymysql', 'php', 'php-mysql', 'libapache2-mod-php', 'php-mbstring', 'php-curl', 'php-xml', 'php-zip']
+      loop: [ 'apache2', 'mysql-server', 'python3-pymysql', 'php', 'php-mysql', 'libapache2-mod-php', 'php-mbstring', 'php-curl', 'php-xml', 'php-zip', 'phpunit']
     - name: Install mySQL Server
       apt: name=mysql-server state=present
     - name: Install Additional Dependencies
